@@ -1,0 +1,913 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Daily Planner</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f3f4f6;
+      color: #111827;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      padding: 25px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      opacity: 0.9;
+    }
+
+    .progress-card,
+    .add-card,
+    .section,
+    .review {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+    }
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .percentage {
+      font-size: 32px;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 14px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      transition: 0.3s;
+    }
+
+    .add-form {
+      display: grid;
+      grid-template-columns: 1fr 150px 100px;
+      gap: 10px;
+    }
+
+    input,
+    textarea {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #6366f1;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .add-btn {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .reset-btn {
+      background: #ef4444;
+      color: white;
+    }
+
+    .section h2 {
+      margin-bottom: 15px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      background: #f9fafb;
+    }
+
+    .task:hover {
+      background: #f3f4f6;
+    }
+
+    .task input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .task-time {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+
+    .completed .task-name {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .delete-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 7px 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      margin-top: 10px;
+    }
+
+    .reset-container {
+      text-align: right;
+      margin-bottom: 15px;
+    }
+
+    .empty {
+      color: #9ca3af;
+      text-align: center;
+      padding: 15px;
+    }
+
+    @media (max-width: 650px) {
+      body {
+        padding: 10px;
+      }
+
+      .add-form {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🎯 My Daily Planner</h1>
+    <p id="date"></p>
+  </header>
+
+  <div class="reset-container">
+    <button class="reset-btn" onclick="resetDay()">
+      🔄 Reset Today
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-card">
+
+    <div class="progress-top">
+
+      <div>
+        <p>Today's Progress</p>
+        <div class="percentage" id="percentage">
+          0%
+        </div>
+      </div>
+
+      <div>
+        <p>
+          <b id="completedCount">0</b>
+          completed
+        </p>
+
+        <p>
+          <b id="totalCount">0</b>
+          total
+        </p>
+      </div>
+
+    </div>
+
+    <div class="progress-bar">
+      <div
+        class="progress-fill"
+        id="progressFill">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Add Task -->
+  <div class="add-card">
+
+    <h2>➕ Add Activity</h2>
+
+    <br>
+
+    <form
+      class="add-form"
+      onsubmit="addTask(event)"
+    >
+
+      <input
+        type="text"
+        id="taskInput"
+        placeholder="Example: Study DBMS"
+        required
+      >
+
+      <input
+        type="time"
+        id="timeInput"
+      >
+
+      <button
+        type="submit"
+        class="add-btn">
+        Add
+      </button>
+
+    </form>
+
+  </div>
+
+  <!-- Morning -->
+  <div class="section">
+
+    <h2>🌅 Morning</h2>
+
+    <div id="morning"></div>
+
+  </div>
+
+  <!-- Afternoon -->
+  <div class="section">
+
+    <h2>☀️ Afternoon</h2>
+
+    <div id="afternoon"></div>
+
+  </div>
+
+  <!-- Evening -->
+  <div class="section">
+
+    <h2>🌆 Evening</h2>
+
+    <div id="evening"></div>
+
+  </div>
+
+  <!-- Night -->
+  <div class="section">
+
+    <h2>🌙 Night</h2>
+
+    <div id="night"></div>
+
+  </div>
+
+  <!-- Review -->
+  <div class="review">
+
+    <h2>📝 Day Review</h2>
+
+    <p style="color:#6b7280; margin-top:8px;">
+      Raat ko likho ki aaj tumne kya achieve kiya.
+    </p>
+
+    <textarea
+      id="review"
+      placeholder="Aaj maine..."
+      oninput="saveReview()">
+    </textarea>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  // -----------------------------
+  // DATA
+  // -----------------------------
+
+  let tasks = [
+    {
+      id: 1,
+      name: "Wake Up & Freshen Up",
+      time: "07:00",
+      section: "morning",
+      completed: false
+    },
+
+    {
+      id: 2,
+      name: "Exercise / Walk",
+      time: "08:00",
+      section: "morning",
+      completed: false
+    },
+
+    {
+      id: 3,
+      name: "Breakfast",
+      time: "09:00",
+      section: "morning",
+      completed: false
+    },
+
+    {
+      id: 4,
+      name: "Study / College Work",
+      time: "10:00",
+      section: "afternoon",
+      completed: false
+    },
+
+    {
+      id: 5,
+      name: "Lunch & Break",
+      time: "13:00",
+      section: "afternoon",
+      completed: false
+    },
+
+    {
+      id: 6,
+      name: "Coding / Skill Practice",
+      time: "14:00",
+      section: "afternoon",
+      completed: false
+    },
+
+    {
+      id: 7,
+      name: "Revision",
+      time: "17:00",
+      section: "evening",
+      completed: false
+    },
+
+    {
+      id: 8,
+      name: "Hobby / Relax",
+      time: "18:30",
+      section: "evening",
+      completed: false
+    },
+
+    {
+      id: 9,
+      name: "Complete Pending Tasks",
+      time: "19:30",
+      section: "evening",
+      completed: false
+    },
+
+    {
+      id: 10,
+      name: "Review Today's Work",
+      time: "21:00",
+      section: "night",
+      completed: false
+    },
+
+    {
+      id: 11,
+      name: "Plan Tomorrow",
+      time: "22:00",
+      section: "night",
+      completed: false
+    },
+
+    {
+      id: 12,
+      name: "Sleep",
+      time: "23:00",
+      section: "night",
+      completed: false
+    }
+  ];
+
+
+  // -----------------------------
+  // DATE
+  // -----------------------------
+
+  function getToday() {
+
+    let today = new Date();
+
+    return today.toISOString().split("T")[0];
+
+  }
+
+
+  document.getElementById("date").innerText =
+    new Date().toLocaleDateString(
+      "en-IN",
+      {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }
+    );
+
+
+  // -----------------------------
+  // STORAGE
+  // -----------------------------
+
+  function loadData() {
+
+    let savedDate =
+      localStorage.getItem("plannerDate");
+
+    let today = getToday();
+
+
+    // New day → reset
+    if (savedDate !== today) {
+
+      localStorage.removeItem("plannerTasks");
+
+      localStorage.removeItem("plannerReview");
+
+      localStorage.setItem(
+        "plannerDate",
+        today
+      );
+
+    }
+
+
+    let savedTasks =
+      localStorage.getItem("plannerTasks");
+
+
+    if (savedTasks) {
+
+      tasks = JSON.parse(savedTasks);
+
+    }
+
+
+    let savedReview =
+      localStorage.getItem("plannerReview");
+
+
+    if (savedReview) {
+
+      document.getElementById("review").value =
+        savedReview;
+
+    }
+
+  }
+
+
+  function saveData() {
+
+    localStorage.setItem(
+      "plannerTasks",
+      JSON.stringify(tasks)
+    );
+
+    localStorage.setItem(
+      "plannerDate",
+      getToday()
+    );
+
+  }
+
+
+  // -----------------------------
+  // DISPLAY TASKS
+  // -----------------------------
+
+  function renderTasks() {
+
+    let sections = [
+      "morning",
+      "afternoon",
+      "evening",
+      "night"
+    ];
+
+
+    sections.forEach(section => {
+
+      let element =
+        document.getElementById(section);
+
+      element.innerHTML = "";
+
+      let sectionTasks =
+        tasks.filter(
+          task => task.section === section
+        );
+
+
+      if (sectionTasks.length === 0) {
+
+        element.innerHTML =
+          '<div class="empty">No tasks</div>';
+
+        return;
+
+      }
+
+
+      sectionTasks.forEach(task => {
+
+        let div =
+          document.createElement("div");
+
+
+        div.className =
+          "task " +
+          (task.completed ? "completed" : "");
+
+
+        div.innerHTML = `
+
+          <input
+            type="checkbox"
+            ${task.completed ? "checked" : ""}
+            onchange="toggleTask(${task.id})"
+          >
+
+          <div class="task-info">
+
+            <div class="task-name">
+              ${escapeHTML(task.name)}
+            </div>
+
+            <div class="task-time">
+              ${task.time || "Anytime"}
+            </div>
+
+          </div>
+
+          <button
+            class="delete-btn"
+            onclick="deleteTask(${task.id})">
+            🗑
+          </button>
+
+        `;
+
+
+        element.appendChild(div);
+
+      });
+
+    });
+
+
+    updateProgress();
+
+  }
+
+
+  // -----------------------------
+  // ADD TASK
+  // -----------------------------
+
+  function addTask(event) {
+
+    event.preventDefault();
+
+
+    let name =
+      document.getElementById("taskInput")
+      .value.trim();
+
+
+    let time =
+      document.getElementById("timeInput")
+      .value;
+
+
+    if (!name) return;
+
+
+    let section = getSection(time);
+
+
+    let newTask = {
+
+      id: Date.now(),
+
+      name: name,
+
+      time: time,
+
+      section: section,
+
+      completed: false
+
+    };
+
+
+    tasks.push(newTask);
+
+
+    saveData();
+
+    renderTasks();
+
+
+    document.getElementById("taskInput").value = "";
+
+    document.getElementById("timeInput").value = "";
+
+  }
+
+
+  // -----------------------------
+  // TIME SECTION
+  // -----------------------------
+
+  function getSection(time) {
+
+    if (!time) {
+
+      return "afternoon";
+
+    }
+
+
+    let hour =
+      parseInt(time.split(":")[0]);
+
+
+    if (hour < 10) {
+
+      return "morning";
+
+    }
+
+
+    if (hour < 17) {
+
+      return "afternoon";
+
+    }
+
+
+    if (hour < 21) {
+
+      return "evening";
+
+    }
+
+
+    return "night";
+
+  }
+
+
+  // -----------------------------
+  // COMPLETE TASK
+  // -----------------------------
+
+  function toggleTask(id) {
+
+    tasks = tasks.map(task => {
+
+      if (task.id === id) {
+
+        task.completed =
+          !task.completed;
+
+      }
+
+      return task;
+
+    });
+
+
+    saveData();
+
+    renderTasks();
+
+  }
+
+
+  // -----------------------------
+  // DELETE TASK
+  // -----------------------------
+
+  function deleteTask(id) {
+
+    tasks =
+      tasks.filter(
+        task => task.id !== id
+      );
+
+
+    saveData();
+
+    renderTasks();
+
+  }
+
+
+  // -----------------------------
+  // PROGRESS
+  // -----------------------------
+
+  function updateProgress() {
+
+    let total =
+      tasks.length;
+
+
+    let completed =
+      tasks.filter(
+        task => task.completed
+      ).length;
+
+
+    let percentage =
+      total === 0
+        ? 0
+        : Math.round(
+            (completed / total) * 100
+          );
+
+
+    document.getElementById(
+      "percentage"
+    ).innerText =
+      percentage + "%";
+
+
+    document.getElementById(
+      "completedCount"
+    ).innerText =
+      completed;
+
+
+    document.getElementById(
+      "totalCount"
+    ).innerText =
+      total;
+
+
+    document.getElementById(
+      "progressFill"
+    ).style.width =
+      percentage + "%";
+
+  }
+
+
+  // -----------------------------
+  // REVIEW
+  // -----------------------------
+
+  function saveReview() {
+
+    let review =
+      document.getElementById("review")
+      .value;
+
+
+    localStorage.setItem(
+      "plannerReview",
+      review
+    );
+
+  }
+
+
+  // -----------------------------
+  // RESET
+  // -----------------------------
+
+  function resetDay() {
+
+    let confirmReset =
+      confirm(
+        "Kya aap aaj ke saare tasks reset karna chahte ho?"
+      );
+
+
+    if (!confirmReset) return;
+
+
+    tasks.forEach(task => {
+
+      task.completed = false;
+
+    });
+
+
+    document.getElementById(
+      "review"
+    ).value = "";
+
+
+    localStorage.removeItem(
+      "plannerReview"
+    );
+
+
+    saveData();
+
+    renderTasks();
+
+  }
+
+
+  // -----------------------------
+  // SECURITY
+  // -----------------------------
+
+  function escapeHTML(text) {
+
+    let div =
+      document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+  }
+
+
+  // -----------------------------
+  // START
+  // -----------------------------
+
+  loadData();
+
+  renderTasks();
+
+</script>
+
+</body>
+</html>
+
